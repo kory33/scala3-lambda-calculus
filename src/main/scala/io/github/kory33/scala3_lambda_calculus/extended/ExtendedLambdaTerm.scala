@@ -2,6 +2,7 @@ package io.github.kory33.scala3_lambda_calculus.extended
 
 import io.github.kory33.scala3_lambda_calculus.foundation.Variable
 import io.github.kory33.scala3_lambda_calculus.foundation.freshVariableNotIn
+import cats.Show
 
 // 拡張λ項とは…
 enum ExtendedLambdaTerm[ /* 定数の型 */ +C, /* プリミティブオペレータの型 */ +P]:
@@ -23,6 +24,12 @@ enum ExtendedLambdaTerm[ /* 定数の型 */ +C, /* プリミティブオペレ�
   case PrimitiveOperator(operator: P, arguments: List[ExtendedLambdaTerm[C, P]])
 
 object ExtendedLambdaTerm {
+  given Show[ExtendedLambdaTerm[Nothing, Nothing]] with
+    def show(t: ExtendedLambdaTerm[Nothing, Nothing]): String = ShowExtendedLambdaTerm.show(t)
+
+  given [C: Show, P: Show]: Show[ExtendedLambdaTerm[C, P]] with
+    def show(t: ExtendedLambdaTerm[C, P]): String = ShowExtendedLambdaTerm.show(t)
+
   extension [C, P](t: ExtendedLambdaTerm[C, P])
     def freeVariables: Set[Variable] = t match
       case VarReference(v)             => Set(v)
