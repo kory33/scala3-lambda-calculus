@@ -1,4 +1,7 @@
+package io.github.kory33.scala3_lambda_calculus
+
 import scala.annotation.tailrec
+
 // 拡張λ項とは…
 enum ExtendedLambdaTerm[ /* 定数の型 */ C, /* プリミティブオペレータの型 */ P]:
   // 変数をひとつ書き下したものは λ 項

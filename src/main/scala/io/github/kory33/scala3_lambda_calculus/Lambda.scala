@@ -1,3 +1,5 @@
+package io.github.kory33.scala3_lambda_calculus
+
 // λ項とは…
 enum LambdaTerm:
   // 変数をひとつ書き下したものは λ 項

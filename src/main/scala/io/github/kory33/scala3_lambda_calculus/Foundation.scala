@@ -1,3 +1,5 @@
+package io.github.kory33.scala3_lambda_calculus
+
 // 変数。
 // 実際のところ、Variable = AnyRef にしていい (値同士が区別可能で無限個あればなんでもいい) んですが、pretty-print しにくいのと、AnyRef をいっぱい作っておくのがひたすらに面倒なので、String を使います
 // ちなみに、Variable = BigInteger でももちろんいいです
