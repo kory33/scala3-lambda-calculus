@@ -6,8 +6,9 @@ import io.github.kory33.scala3_lambda_calculus.foundation.{Variable, freshVariab
 enum EvaluationError[C, P]:
   case VariableNotBound(variable: Variable)
   case ArgumentAppliedToConstant(constant: C, argument: ExtendedLambdaTerm.Value[C, P])
+  case PrimitiveOperatorFailedToEvaluate(msg: String, operator: P, arguments: List[ValueClosure[C, P]])
 
-case class ClosureWithTermRestriction[C, P, +TermSubClass <: ExtendedLambdaTerm[C, P]](
+case class ClosureWithTermRestriction[+C, +P, +TermSubClass <: ExtendedLambdaTerm[C, P]](
     lambdaTerm: TermSubClass,
     environment: Environment[C, P]
 ) {
@@ -24,15 +25,15 @@ trait ClosureWithTermRestrictionSpecialization[TermSubClass[C, P] <: ExtendedLam
   ): (TermSubClass[C, P], Environment[C, P]) = (closure.lambdaTerm, closure.environment)
 }
 
-type Closure[C, P] = ClosureWithTermRestriction[C, P, ExtendedLambdaTerm[C, P]]
+type Closure[+C, +P] = ClosureWithTermRestriction[C, P, ExtendedLambdaTerm[C, P]]
 object Closure extends ClosureWithTermRestrictionSpecialization[ExtendedLambdaTerm]
-type ValueClosure[C, P] = ClosureWithTermRestriction[C, P, ExtendedLambdaTerm.Value[C, P]]
+type ValueClosure[+C, +P] = ClosureWithTermRestriction[C, P, ExtendedLambdaTerm.Value[C, P]]
 object ValueClosure extends ClosureWithTermRestrictionSpecialization[ExtendedLambdaTerm.Value]
-type AbstractionClosure[C, P] = ClosureWithTermRestriction[C, P, ExtendedLambdaTerm.Abstraction[C, P]]
+type AbstractionClosure[+C, +P] = ClosureWithTermRestriction[C, P, ExtendedLambdaTerm.Abstraction[C, P]]
 object AbstractionClosure extends ClosureWithTermRestrictionSpecialization[ExtendedLambdaTerm.Abstraction]
 
-case class Environment[C, P](mapping: Map[Variable, Closure[C, P]]) {
-  def overwrite(variable: Variable, closure: Closure[C, P]): Environment[C, P] =
+case class Environment[+C, +P](mapping: Map[Variable, Closure[C, P]]) {
+  def overwrite[C2 >: C, P2 >: P](variable: Variable, closure: Closure[C2, P2]): Environment[C2, P2] =
     Environment(mapping + (variable -> closure))
 
   def lookup(variable: Variable): Option[Closure[C, P]] =
@@ -80,7 +81,9 @@ object CEKMachineState {
       case (v, ThenEvalOperatorArgs(op, evaluated, nextArg :: rest, k)) =>
         Right(CEKMachineState(nextArg, ThenEvalOperatorArgs(op, v :: evaluated, rest, k)))
       case (v, ThenEvalOperatorArgs(op, evaluated, Nil, k)) =>
-        Right(CEKMachineState(Closure(operatorEvaluator.eval(op, evaluated.reverse), Environment.empty), k))
+        operatorEvaluator.eval(op, evaluated.reverse).map { result =>
+          CEKMachineState(ValueClosure(result, Environment.empty), k)
+        }
       case (v, ThenTerminate()) =>
         Right(CEKMachineState(v, ThenTerminate()))
     }
@@ -106,12 +109,9 @@ object CEKMachineState {
           )
         )
       case (Closure(PrimitiveOperator(op, Nil), env), k) =>
-        Right(
-          CEKMachineState(
-            Closure(operatorEvaluator.eval(op, Nil), Environment.empty),
-            k
-          )
-        )
+        operatorEvaluator.eval(op, Nil).map { result =>
+          CEKMachineState(ValueClosure(result, Environment.empty), k)
+        }
       case (Closure(PrimitiveOperator(op, m1 :: argsRest), env), k) =>
         Right(
           CEKMachineState(
@@ -126,8 +126,10 @@ object CEKMachineState {
 }
 
 trait EvaluatesTo[P, C] {
-  def eval(p: P, args: List[ValueClosure[C, P]]):
-  /* no free-variables */ ExtendedLambdaTerm.Value[C, P]
+  def eval(p: P, args: List[ValueClosure[C, P]]): Either[
+    EvaluationError.PrimitiveOperatorFailedToEvaluate[C, P],
+    /* no free-variables */ ExtendedLambdaTerm.Value[C, P]
+  ]
 }
 
 case class CEKMachineState[C, P](

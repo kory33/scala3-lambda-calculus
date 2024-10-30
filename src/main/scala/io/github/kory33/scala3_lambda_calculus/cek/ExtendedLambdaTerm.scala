@@ -4,7 +4,7 @@ import io.github.kory33.scala3_lambda_calculus.foundation.Variable
 import io.github.kory33.scala3_lambda_calculus.foundation.freshVariableNotIn
 
 // 拡張λ項とは…
-enum ExtendedLambdaTerm[ /* 定数の型 */ C, /* プリミティブオペレータの型 */ P]:
+enum ExtendedLambdaTerm[ /* 定数の型 */ +C, /* プリミティブオペレータの型 */ +P]:
   // 変数をひとつ書き下したものは λ 項
   case VarReference(variable: Variable)
   // 適用。(λx. x x)(λy. y) を Application(λx. x x, λy. y) として扱いたい
