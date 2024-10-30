@@ -24,6 +24,9 @@ enum ExtendedLambdaTerm[ /* 定数の型 */ +C, /* プリミティブオペレ�
   case PrimitiveOperator(operator: P, arguments: List[ExtendedLambdaTerm[C, P]])
 
 object ExtendedLambdaTerm {
+  type Value[C, P] =
+    ExtendedLambdaTerm.Abstraction[C, P] | ExtendedLambdaTerm.Constant[C, P]
+
   given Show[ExtendedLambdaTerm[Nothing, Nothing]] with
     def show(t: ExtendedLambdaTerm[Nothing, Nothing]): String = ShowExtendedLambdaTerm.show(t)
 
@@ -123,7 +126,4 @@ object ExtendedLambdaTerm {
       right: ExtendedLambdaTerm[C, P]
   ): ExtendedLambdaTerm[C, P] =
     left.body.substitute(left.boundVar, right)
-
-  type Value[C, P] =
-    ExtendedLambdaTerm.Abstraction[C, P] | ExtendedLambdaTerm.Constant[C, P]
 }
