@@ -30,15 +30,6 @@ enum ArithmeticOps derives Show {
 }
 
 object ArithmeticOps {
-  given Show[ArithmeticOps] with {
-    override def show(t: ArithmeticOps): String = t match {
-      case Add            => "Add"
-      case Mul            => "Mul"
-      case FirstLeqSecond => "FirstLeqSecond"
-      case If             => "If"
-    }
-  }
-
   given EvaluatesTo[ArithmeticOps, BoolOrNat] with {
     override def eval(
         p: ArithmeticOps,
