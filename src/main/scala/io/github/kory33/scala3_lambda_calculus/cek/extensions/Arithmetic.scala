@@ -5,6 +5,8 @@ import io.github.kory33.scala3_lambda_calculus.cek.ValueClosure
 import io.github.kory33.scala3_lambda_calculus.cek.EvaluationError.PrimitiveOperatorFailedToEvaluate
 import io.github.kory33.scala3_lambda_calculus.cek.ExtendedLambdaTerm
 import io.github.kory33.scala3_lambda_calculus.cek.ExtendedLambdaTerm.*
+import cats.Show
+import cats.derived.*
 
 case class Natural(value: BigInt) {
   require(value >= 0)
@@ -14,12 +16,29 @@ case class Natural(value: BigInt) {
 }
 
 type BoolOrNat = Boolean | Natural
+object BoolOrNat {
+  given Show[BoolOrNat] with {
+    override def show(t: BoolOrNat): String = t match {
+      case b: Boolean => b.toString
+      case Natural(n) => n.toString
+    }
+  }
+}
 
-enum ArithmeticOps {
+enum ArithmeticOps derives Show {
   case Add, Mul, FirstLeqSecond, If
 }
 
 object ArithmeticOps {
+  given Show[ArithmeticOps] with {
+    override def show(t: ArithmeticOps): String = t match {
+      case Add            => "Add"
+      case Mul            => "Mul"
+      case FirstLeqSecond => "FirstLeqSecond"
+      case If             => "If"
+    }
+  }
+
   given EvaluatesTo[ArithmeticOps, BoolOrNat] with {
     override def eval(
         p: ArithmeticOps,
