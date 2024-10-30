@@ -179,9 +179,7 @@ object CEKMachineState {
   def stepContinuation[P, C](
       valueToPassToContinuation: ValueClosure[C, P],
       continuation: Continuation[C, P]
-  )(using
-      operatorEvaluator: P `EvaluatesTo` C
-  ): Either[EvaluationError[C, P], CEKMachineState[C, P]] = {
+  )(using operatorEvaluator: P `EvaluatesTo` C): Either[EvaluationError[C, P], CEKMachineState[C, P]] = {
     import ExtendedLambdaTerm.*
     import Continuation.*
 
@@ -237,10 +235,8 @@ object CEKMachineState {
             Continuation.ThenEvalOperatorArgs(op, Nil, argsRest.map(m => Closure(m, env)), k)
           )
         )
-      case (Closure(abs @ Abstraction(_, _), env), k) =>
-        stepContinuation(ValueClosure(abs, env), k)
-      case (Closure(const @ Constant(_), env), k) =>
-        stepContinuation(ValueClosure(const, env), k)
+      case (Closure(value: (Abstraction[C, P] | Constant[C, P]), env), k) =>
+        stepContinuation(ValueClosure(value, env), k)
     }
   }
 }
