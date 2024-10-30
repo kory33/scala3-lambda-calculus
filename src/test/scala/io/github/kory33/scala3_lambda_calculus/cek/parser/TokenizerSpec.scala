@@ -10,8 +10,8 @@ class TokenizerSpec extends AnyFreeSpec with Matchers with TableDrivenPropertyCh
       require(LambdaTermTokenizer.tokenize(input).isRight)
     }
 
-    "Succeeds in tokenizing negative inputs (that must be rejected by parsers)" in forAll(negativeInputs.syntaxError) {
-      input => require(LambdaTermTokenizer.tokenize(input).isRight)
+    "Succeeds in tokenizing negative inputs (that must be rejected by parsers)" in forAll(negativeInputs.all) { input =>
+      require(LambdaTermTokenizer.tokenize(input).isRight)
     }
   }
 }

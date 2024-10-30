@@ -65,6 +65,8 @@ object TestCases {
       "λa a.a",
       "\\a a.a"
     )
+
+    val all = syntaxError ++ duplicateBindsInASingleLambda
   }
 
   trait TestCasesTables { self: Tables =>
@@ -72,6 +74,8 @@ object TestCases {
     object negativeInputs {
       val syntaxError = Table("input", TestCases.negativeInputs.syntaxError*)
       val duplicateBindsInASingleLambda = Table("input", TestCases.negativeInputs.duplicateBindsInASingleLambda*)
+
+      val all = Table("input", TestCases.negativeInputs.all*)
     }
   }
 }

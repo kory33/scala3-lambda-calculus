@@ -16,6 +16,7 @@ import io.github.kory33.scala3_lambda_calculus.util.parsing.VectorReader
  *       | <LParen> <ExtendedLambdaTerm> <RParen>
  *       | <LSquareParen> <PrimitiveOperator> <PrimaryTerm>* <RSquareParen>
  *  - <Abstraction> ::= <Lambda> <Variable>+ <ArgBodySeparator> <ExtendedLambdaTerm>
+ *      (where <Variable> is a sequence of distinct variables)
  */
 class ExtendedLambdaTermParser[C, P] extends Parsers {
   type Elem = Token[C, P]
@@ -47,9 +48,15 @@ class ExtendedLambdaTermParser[C, P] extends Parsers {
   }
 
   def abstraction =
-    (lambda ~> rep1(variable)) ~ (argBodySeparator ~> term) ^^ { case ~(variables, body) =>
-      variables.foldRight(body) { case (variable, wrappedBody) =>
-        ExtendedLambdaTerm.Abstraction[C, P](variable, wrappedBody)
+    ((lambda ~> rep1(variable)) ~ (argBodySeparator ~> term)).flatMap { case ~(variables, body) =>
+      println(variables)
+
+      if (variables.distinct.length != variables.length) {
+        failure("Variables in abstraction must be distinct")
+      } else {
+        success(variables.foldRight(body) { case (variable, wrappedBody) =>
+          ExtendedLambdaTerm.Abstraction[C, P](variable, wrappedBody)
+        })
       }
     }
 }

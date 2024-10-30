@@ -12,7 +12,7 @@ class ParserSpec extends AnyFreeSpec with Matchers with TableDrivenPropertyCheck
       require(ExtendedLambdaTermParser.parse(tokenStream).isRight)
     }
 
-    "Fails in parsing negative inputs" in forAll(negativeInputs.syntaxError) { input =>
+    "Fails in parsing negative inputs" in forAll(negativeInputs.all) { input =>
       val tokenStream = LambdaTermTokenizer.tokenize(input).getOrElse(fail("Failed to tokenize"))
 
       require(ExtendedLambdaTermParser.parse(tokenStream).isLeft)
