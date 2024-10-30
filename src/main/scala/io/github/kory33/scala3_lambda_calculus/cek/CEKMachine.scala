@@ -121,7 +121,7 @@ object CEKMachineState {
       case (v, ThenEvalOperatorArgs(op, evaluated, nextArg :: rest, k)) =>
         Right(CEKMachineState(nextArg, ThenEvalOperatorArgs(op, v :: evaluated, rest, k)))
       case (v, ThenEvalOperatorArgs(op, evaluated, Nil, k)) =>
-        operatorEvaluator.eval(op, evaluated.reverse).map { result =>
+        operatorEvaluator.eval(op, (v :: evaluated).reverse).map { result =>
           CEKMachineState(ValueClosure(result, Environment.empty), k)
         }
       case (v, ThenTerminate()) =>
@@ -200,8 +200,9 @@ case class CEKMachineState[C, P](
   def hasTerminated: Boolean =
     continuation == Continuation.ThenTerminate() && {
       closureToEvaluate.lambdaTerm match
-        case _: Abstraction[C, P] | Constant => true
-        case _                               => false
+        case _: Abstraction[C, P] => true
+        case _: Constant[C, P]    => true
+        case _                    => false
     }
 
   def stepUntilTermination(stepLimit: Option[Int] = None): Either[EvaluationError[C, P], CEKMachineState[C, P]] =
