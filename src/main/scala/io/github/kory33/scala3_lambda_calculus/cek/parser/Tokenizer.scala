@@ -6,6 +6,8 @@ import scala.util.parsing.combinator.RegexParsers
 /** Tokens:
   *   - <LParen> ::= '('
   *   - <RParen> ::= ')'
+  *   - <LSquareParen> ::= '['
+  *   - <RSquareParen> ::= ']'
   *   - <ArgBodySeparator> ::= '.'
   *   - <Variable> ::= [a-zA-Z_][a-zA-Z0-9_]*
   *   - <Lambda> ::= '\' | 'λ'
@@ -16,6 +18,8 @@ enum Token[C, P]:
   case Constant(constant: C) extends Token[C, P]
   case PrimitiveOperator(operator: P) extends Token[C, P]
   case VarReference(variable: Variable) extends Token[C, P]
+  case LSquareParen() extends Token[C, P]
+  case RSquareParen() extends Token[C, P]
   case LParen() extends Token[C, P]
   case RParen() extends Token[C, P]
   case ArgBodySeparator() extends Token[C, P]
@@ -32,6 +36,8 @@ abstract class ExtendedLambdaTermTokenizer[C, P] extends RegexParsers {
       case Right(primitiveOperator) => Token.PrimitiveOperator(primitiveOperator)
     } |
       """[a-zA-Z_][a-zA-Z0-9_]*""".r ^^ { vName => Token.VarReference(vName) } |
+      "[" ^^ { _ => Token.LSquareParen() } |
+      "]" ^^ { _ => Token.RSquareParen() } |
       "(" ^^ { _ => Token.LParen() } |
       ")" ^^ { _ => Token.RParen() } |
       "." ^^ { _ => Token.ArgBodySeparator() } |

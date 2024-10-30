@@ -19,7 +19,7 @@ enum ExtendedLambdaTerm[ /* 定数の型 */ C, /* プリミティブオペレー
   )
   // 定数
   case Constant(constant: C)
-  // プリミティブオペレータの適用
+  // プリミティブオペレータの適用 (e.g. "[Sum (λx. x) 3 5]")
   case PrimitiveOperator(operator: P, arguments: List[ExtendedLambdaTerm[C, P]])
 
 object ExtendedLambdaTerm {
