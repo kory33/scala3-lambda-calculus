@@ -1,0 +1,7 @@
+**/.metals
+**/.bloop
+**/.scala-build
+**/.vscode
+**/.bsp
+**/metals.sbt
+**/target
