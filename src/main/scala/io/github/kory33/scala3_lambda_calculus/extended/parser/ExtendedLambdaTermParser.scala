@@ -1,9 +1,9 @@
-package io.github.kory33.scala3_lambda_calculus.cek.parser
+package io.github.kory33.scala3_lambda_calculus.extended.parser
 
 import scala.util.parsing.combinator.RegexParsers
 import io.github.kory33.scala3_lambda_calculus.foundation.Variable
 import cats.data.Chain
-import io.github.kory33.scala3_lambda_calculus.cek.ExtendedLambdaTerm
+import io.github.kory33.scala3_lambda_calculus.extended.ExtendedLambdaTerm
 import scala.util.parsing.combinator.Parsers
 import io.github.kory33.scala3_lambda_calculus.util.parsing.VectorReader
 

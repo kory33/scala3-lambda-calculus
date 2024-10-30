@@ -1,9 +1,9 @@
-package io.github.kory33.scala3_lambda_calculus.cek.parser
+package io.github.kory33.scala3_lambda_calculus.extended.parser
 
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.*
 import org.scalatest.prop.TableDrivenPropertyChecks
-import io.github.kory33.scala3_lambda_calculus.cek.extensions.Natural
+import io.github.kory33.scala3_lambda_calculus.extended.extensions.Natural
 
 class ParserSpec extends AnyFreeSpec with Matchers with TableDrivenPropertyChecks with TestCases.TestCasesTables {
   "LambdaTermTokenizer + ExtendedLambdaTermParser" - {
@@ -19,7 +19,7 @@ class ParserSpec extends AnyFreeSpec with Matchers with TableDrivenPropertyCheck
     }
 
     val e2eTestCases = {
-      import io.github.kory33.scala3_lambda_calculus.cek.ExtendedLambdaTerm.*
+      import io.github.kory33.scala3_lambda_calculus.extended.ExtendedLambdaTerm.*
       Table(
         heading = "input" -> "expected",
         "a" -> VarReference("a"),
@@ -47,8 +47,8 @@ class ParserSpec extends AnyFreeSpec with Matchers with TableDrivenPropertyCheck
 
   "ArithmeticTokenizer + ExtendedLambdaTermParser" - {
     val e2eTestCases = {
-      import io.github.kory33.scala3_lambda_calculus.cek.ExtendedLambdaTerm.*
-      import io.github.kory33.scala3_lambda_calculus.cek.extensions.ArithmeticOps.*
+      import io.github.kory33.scala3_lambda_calculus.extended.ExtendedLambdaTerm.*
+      import io.github.kory33.scala3_lambda_calculus.extended.extensions.ArithmeticOps.*
 
       Table(
         heading = "input" -> "expected",

@@ -2,6 +2,7 @@ package io.github.kory33.scala3_lambda_calculus.cek
 
 import scala.annotation.tailrec
 import io.github.kory33.scala3_lambda_calculus.foundation.{Variable, freshVariableNotIn}
+import io.github.kory33.scala3_lambda_calculus.extended.ExtendedLambdaTerm
 
 enum EvaluationError[C, P]:
   case VariableNotBound(variable: Variable)

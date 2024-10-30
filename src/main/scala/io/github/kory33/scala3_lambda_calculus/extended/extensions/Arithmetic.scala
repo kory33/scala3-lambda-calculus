@@ -1,10 +1,10 @@
-package io.github.kory33.scala3_lambda_calculus.cek.extensions
+package io.github.kory33.scala3_lambda_calculus.extended.extensions
 
 import io.github.kory33.scala3_lambda_calculus.cek.EvaluatesTo
 import io.github.kory33.scala3_lambda_calculus.cek.ValueClosure
 import io.github.kory33.scala3_lambda_calculus.cek.EvaluationError.PrimitiveOperatorFailedToEvaluate
-import io.github.kory33.scala3_lambda_calculus.cek.ExtendedLambdaTerm
-import io.github.kory33.scala3_lambda_calculus.cek.ExtendedLambdaTerm.*
+import io.github.kory33.scala3_lambda_calculus.extended.ExtendedLambdaTerm
+import io.github.kory33.scala3_lambda_calculus.extended.ExtendedLambdaTerm.*
 import cats.Show
 import cats.derived.*
 

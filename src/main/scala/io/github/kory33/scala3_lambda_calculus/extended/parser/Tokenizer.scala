@@ -1,4 +1,4 @@
-package io.github.kory33.scala3_lambda_calculus.cek.parser
+package io.github.kory33.scala3_lambda_calculus.extended.parser
 
 import io.github.kory33.scala3_lambda_calculus.foundation.Variable
 import scala.util.parsing.combinator.RegexParsers

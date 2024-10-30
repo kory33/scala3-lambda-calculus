@@ -1,9 +1,9 @@
-package io.github.kory33.scala3_lambda_calculus.cek.parser
+package io.github.kory33.scala3_lambda_calculus.extended.parser
 
-import io.github.kory33.scala3_lambda_calculus.cek.extensions.BoolOrNat
-import io.github.kory33.scala3_lambda_calculus.cek.extensions.ArithmeticOps
+import io.github.kory33.scala3_lambda_calculus.extended.extensions.BoolOrNat
+import io.github.kory33.scala3_lambda_calculus.extended.extensions.ArithmeticOps
 import scala.util.parsing.input.Positional
-import io.github.kory33.scala3_lambda_calculus.cek.extensions.Natural
+import io.github.kory33.scala3_lambda_calculus.extended.extensions.Natural
 
 object ArithmeticTokenizer extends ExtendedLambdaTermTokenizer[BoolOrNat, ArithmeticOps] {
 

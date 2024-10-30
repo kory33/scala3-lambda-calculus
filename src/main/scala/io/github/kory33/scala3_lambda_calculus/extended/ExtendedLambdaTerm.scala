@@ -1,4 +1,4 @@
-package io.github.kory33.scala3_lambda_calculus.cek
+package io.github.kory33.scala3_lambda_calculus.extended
 
 import io.github.kory33.scala3_lambda_calculus.foundation.Variable
 import io.github.kory33.scala3_lambda_calculus.foundation.freshVariableNotIn
