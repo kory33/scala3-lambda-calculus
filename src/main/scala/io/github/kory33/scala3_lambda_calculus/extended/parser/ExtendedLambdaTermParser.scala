@@ -49,8 +49,6 @@ class ExtendedLambdaTermParser[C, P] extends Parsers {
 
   def abstraction =
     ((lambda ~> rep1(variable)) ~ (argBodySeparator ~> term)).flatMap { case ~(variables, body) =>
-      println(variables)
-
       if (variables.distinct.length != variables.length) {
         failure("Variables in abstraction must be distinct")
       } else {
