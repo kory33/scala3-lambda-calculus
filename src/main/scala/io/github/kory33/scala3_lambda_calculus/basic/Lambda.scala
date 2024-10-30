@@ -1,4 +1,6 @@
-package io.github.kory33.scala3_lambda_calculus
+package io.github.kory33.scala3_lambda_calculus.basic
+
+import io.github.kory33.scala3_lambda_calculus.foundation.{Variable, freshVariableNotIn}
 
 // λ項とは…
 enum LambdaTerm:
