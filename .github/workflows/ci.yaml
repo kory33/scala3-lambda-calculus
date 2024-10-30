@@ -4,7 +4,7 @@ on:
   push:
 
 jobs:
-  build-gradle-project:
+  sbt-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,6 +13,6 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
-          cache: 'maven'
+          java-version: '21'
+          cache: 'sbt'
       - run: sbt test
