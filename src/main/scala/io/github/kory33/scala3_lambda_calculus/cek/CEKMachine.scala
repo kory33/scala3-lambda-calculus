@@ -85,7 +85,9 @@ object Continuation {
         case ThenApplyAbstraction(abstraction, k) => s"ThenApplyAbstraction(${abstraction.show}, ${k.show})"
         case ThenEvalArg(arg, k)                  => s"ThenEvalArg(${arg.show}, ${k.show})"
         case ThenEvalOperatorArgs(op, evaluated, toEval, k) =>
-          s"ThenEvalOperatorArgs($op, $evaluated, $toEval, ${k.show})"
+          val evaluatedStr = evaluated.map(_.show).mkString("[", ", ", "]")
+          val toEvalStr = toEval.map(_.show).mkString("[", ", ", "]")
+          s"ThenEvalOperatorArgs($op, $evaluatedStr, $toEvalStr, ${k.show})"
       }
     }
   }
