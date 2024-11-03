@@ -16,11 +16,4 @@ object ArithmeticTokenizer extends ExtendedLambdaTermTokenizer[BoolOrNat, Arithm
       "true" ^^ { _ => Left(true) } |
       "false" ^^ { _ => Left(false) }
 
-  def tokenize(input: String): Either[String, Vector[Token[BoolOrNat, ArithmeticOps]]] =
-    parse(tokenStreamParser, input) match {
-      case Success(tokens, _) => Right(tokens)
-      case NoSuccess(msg, _)  => Left(msg)
-      case Failure(msg, _)    => Left(msg)
-      case Error(msg, _)      => Left(msg)
-    }
 }

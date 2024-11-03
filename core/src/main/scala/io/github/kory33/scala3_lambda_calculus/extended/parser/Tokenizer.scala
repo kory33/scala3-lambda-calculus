@@ -47,18 +47,19 @@ abstract class ExtendedLambdaTermTokenizer[C, P] extends RegexParsers {
   def tokenStreamParser: Parser[Vector[Token[C, P]]] = rep {
     """\s*""".r ~> tokenParser <~ """\s*""".r
   } ^^ Vector.from
+
+  def tokenize(input: String): Either[String, Vector[Token[C, P]]] =
+    parse(tokenStreamParser, input) match {
+      case Success(tokens, restInput) if restInput.atEnd => Right(tokens)
+      case Success(_, restInput) => Left(s"Failed to tokenize the input:\n${restInput.pos.longString}")
+      case NoSuccess(msg, _)     => Left(msg)
+      case Failure(msg, _)       => Left(msg)
+      case Error(msg, _)         => Left(msg)
+    }
 }
 
 object LambdaTermTokenizer extends ExtendedLambdaTermTokenizer[Nothing, Nothing] {
   def extensionTokenizer: Parser[Either[Nothing, Nothing]] = failure(
     "No extension token is defined by this implementation"
   )
-
-  def tokenize(input: String): Either[String, Vector[Token[Nothing, Nothing]]] =
-    parse(tokenStreamParser, input) match {
-      case Success(tokens, _) => Right(tokens)
-      case NoSuccess(msg, _)  => Left(msg)
-      case Failure(msg, _)    => Left(msg)
-      case Error(msg, _)      => Left(msg)
-    }
 }
