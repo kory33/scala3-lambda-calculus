@@ -39,22 +39,26 @@ class ExtendedLambdaTermParser[C, P] extends Parsers {
   def primaryTerm: Parser[ExtendedLambdaTerm[C, P]] = {
     (variable ^^ ExtendedLambdaTerm.VarReference[C, P])
       | constant
-      | (lparen ~> term <~ rparen)
+      | (lparen ~> commit(term <~ rparen))
       | {
-        (lsquareparen ~> primitiveOperator) ~ (rep(primaryTerm) <~ rsquareparen) ^^ { case ~(op, args) =>
-          ExtendedLambdaTerm.PrimitiveOperator(op, args)
+        lsquareparen ~> commit {
+          primitiveOperator ~ (rep(primaryTerm) <~ rsquareparen) ^^ { case ~(op, args) =>
+            ExtendedLambdaTerm.PrimitiveOperator(op, args)
+          }
         }
       }
   }
 
   def abstraction =
-    ((lambda ~> rep1(variable)) ~ (argBodySeparator ~> term)).flatMap { case ~(variables, body) =>
-      if (variables.distinct.length != variables.length) {
-        failure("Variables in abstraction must be distinct")
-      } else {
-        success(variables.foldRight(body) { case (variable, wrappedBody) =>
-          ExtendedLambdaTerm.Abstraction[C, P](variable, wrappedBody)
-        })
+    lambda ~> commit {
+      (rep1(variable) ~ (argBodySeparator ~> term)).flatMap { case ~(variables, body) =>
+        if (variables.distinct.length != variables.length) {
+          failure("Variables in abstraction must be distinct")
+        } else {
+          success(variables.foldRight(body) { case (variable, wrappedBody) =>
+            ExtendedLambdaTerm.Abstraction[C, P](variable, wrappedBody)
+          })
+        }
       }
     }
 }
