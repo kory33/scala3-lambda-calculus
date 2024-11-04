@@ -46,7 +46,7 @@ object CLI {
       } else {
         printlnIndented(
           1,
-          encloseInSGR(2, s"[Eval, step $counter]> ") + encloseInSGR(2, encloseInSGR(33, s"${machineState.show}"))
+          encloseInSGR(2, s"[Eval, step $counter]> ") + encloseInSGR(36, s"${machineState.show}")
         )
 
         machineState = machineState.stepOnce match {
