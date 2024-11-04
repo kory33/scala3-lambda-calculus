@@ -21,15 +21,26 @@ import io.github.kory33.scala3_lambda_calculus.util.parsing.VectorReader
 class ExtendedLambdaTermParser[C, P] extends Parsers {
   type Elem = Token[C, P]
 
-  val variable = accept("variable", { case Token.VarReference(v) => v })
-  val constant = accept("constant", { case Token.Constant(c) => ExtendedLambdaTerm.Constant[C, P](c) })
-  val lparen = accept("left paren", { case Token.LParen() => () })
-  val rparen = accept("right paren", { case Token.RParen() => () })
-  val lsquareparen = accept("lsquareparen", { case Token.LSquareParen() => () })
-  val rsquareparen = accept("rsquareparen", { case Token.RSquareParen() => () })
-  val lambda = accept("lambda", { case Token.Lambda() => () })
-  val argBodySeparator = accept("arg body separator", { case Token.ArgBodySeparator() => () })
-  val primitiveOperator = accept("primitive operator", { case Token.PrimitiveOperator(p) => p })
+  def expect[U](expected: String, f: PartialFunction[Elem, U]): Parser[U] = Parser { in =>
+    if (in.atEnd) Failure(s"Expected $expected, encountered end of input", in)
+    else if (f.isDefinedAt(in.first)) Success(f(in.first), in.rest)
+    else Failure(expected + " expected", in)
+  }
+
+  def expectAny(expected: String): Parser[Elem] = Parser { in =>
+    if (in.atEnd) Failure(s"Expected $expected, encountered end of input", in)
+    else Success(in.first, in.rest)
+  }
+
+  val variable = expect("a variable", { case Token.VarReference(v) => v })
+  val constant = expect("a constant", { case Token.Constant(c) => ExtendedLambdaTerm.Constant[C, P](c) })
+  val lparen = expect("a left paren (`(`)", { case Token.LParen() => () })
+  val rparen = expect("a right paren (`)`)", { case Token.RParen() => () })
+  val lsquareparen = expect("a left sq paren (`[`)", { case Token.LSquareParen() => () })
+  val rsquareparen = expect("a right sq paren (`]`)", { case Token.RSquareParen() => () })
+  val lambda = expect("a lambda symbol (`λ`, `\\`)", { case Token.Lambda() => () })
+  val argBodySeparator = expect("the arg body separator (`.`)", { case Token.ArgBodySeparator() => () })
+  val primitiveOperator = expect("a primitive operator", { case Token.PrimitiveOperator(p) => p })
 
   def term: Parser[ExtendedLambdaTerm[C, P]] =
     abstraction | rep1(primaryTerm) ^^ { terms =>
@@ -47,13 +58,21 @@ class ExtendedLambdaTermParser[C, P] extends Parsers {
           }
         }
       }
+      | (expectAny("a primary term (variable / constant / parenthesized expression)").flatMap { token =>
+        failure(s"Unexpected token: $token")
+      })
   }
 
   def abstraction =
     lambda ~> commit {
       (rep1(variable) ~ (argBodySeparator ~> term)).flatMap { case ~(variables, body) =>
         if (variables.distinct.length != variables.length) {
-          failure("Variables in abstraction must be distinct")
+          val duplicates = variables.groupBy(identity).filter(_._2.length > 1).keys
+          failure(
+            "Variables in abstraction must be distinct, but variable(s) { " +
+              duplicates.mkString(", ") +
+              " } are duplicated"
+          )
         } else {
           success(variables.foldRight(body) { case (variable, wrappedBody) =>
             ExtendedLambdaTerm.Abstraction[C, P](variable, wrappedBody)
@@ -69,7 +88,6 @@ object ExtendedLambdaTermParser {
     parser.term.apply(VectorReader(input)) match {
       case parser.Success(result, next) if next.atEnd => Right(result)
       case parser.Success(_, next)                    => Left(s"Unexpected token: ${next.first}")
-      case parser.NoSuccess(msg, _)                   => Left(msg)
       case parser.Failure(msg, _)                     => Left(msg)
       case parser.Error(msg, _)                       => Left(msg)
     }

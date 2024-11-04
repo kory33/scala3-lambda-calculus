@@ -52,7 +52,6 @@ abstract class ExtendedLambdaTermTokenizer[C, P] extends RegexParsers {
     parse(tokenStreamParser, input) match {
       case Success(tokens, restInput) if restInput.atEnd => Right(tokens)
       case Success(_, restInput) => Left(s"Failed to tokenize the input:\n${restInput.pos.longString}")
-      case NoSuccess(msg, _)     => Left(msg)
       case Failure(msg, _)       => Left(msg)
       case Error(msg, _)         => Left(msg)
     }
