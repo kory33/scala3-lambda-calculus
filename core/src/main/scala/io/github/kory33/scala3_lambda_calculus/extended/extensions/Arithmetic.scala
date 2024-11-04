@@ -26,7 +26,7 @@ object BoolOrNat {
 }
 
 enum ArithmeticOps derives Show {
-  case Add, Mul, FirstLeqSecond, If
+  case Add, Mul, FirstLeqSecond, If, PredOrZero
 }
 
 object ArithmeticOps {
@@ -71,6 +71,16 @@ object ArithmeticOps {
             if cond then Right(v1.lambdaTerm) else Right(v2.lambdaTerm)
           case List(v1, _, _) =>
             Left(PrimitiveOperatorFailedToEvaluate(s"Expected a Boolean condition, found $v1", p, args))
+          case _ =>
+            Left(PrimitiveOperatorFailedToEvaluate("Invalid number of arguments", p, args))
+        }
+      case PredOrZero =>
+        args match {
+          case List(ValueClosure(Constant(Natural(n)), _)) =>
+            if n == 0 then Right(Constant(Natural(0)))
+            else Right(Constant(Natural(n - 1)))
+          case List(ValueClosure(v, _)) =>
+            Left(PrimitiveOperatorFailedToEvaluate(s"Expected a Natural number, found $v", p, args))
           case _ =>
             Left(PrimitiveOperatorFailedToEvaluate("Invalid number of arguments", p, args))
         }

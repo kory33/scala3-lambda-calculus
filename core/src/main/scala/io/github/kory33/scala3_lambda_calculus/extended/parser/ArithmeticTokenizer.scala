@@ -11,7 +11,10 @@ object ArithmeticTokenizer extends ExtendedLambdaTermTokenizer[BoolOrNat, Arithm
     "Add" ^^ { _ => Right(ArithmeticOps.Add) } |
       "Mul" ^^ { _ => Right(ArithmeticOps.Mul) } |
       "FirstLeqSecond" ^^ { _ => Right(ArithmeticOps.FirstLeqSecond) } |
+      "(<=)" ^^ { _ => Right(ArithmeticOps.FirstLeqSecond) } |
       "If" ^^ { _ => Right(ArithmeticOps.If) } |
+      "PredOrZero" ^^ { _ => Right(ArithmeticOps.PredOrZero) } |
+      "Pred" ^^ { _ => Right(ArithmeticOps.PredOrZero) } |
       """\d+""".r ^^ { num => Left(Natural(BigInt(num))) } |
       "true" ^^ { _ => Left(true) } |
       "false" ^^ { _ => Left(false) }
