@@ -58,7 +58,7 @@ object Environment {
 }
 
 enum Continuation[C, P]:
-  case ThenTerminate[C, P]() extends Continuation[C, P]
+  case ThenHalt[C, P]() extends Continuation[C, P]
   case ThenApplyAbstraction(
       abstraction: ClosureWithTermRestriction[C, P, ExtendedLambdaTerm.Abstraction[C, P]],
       andThen: Continuation[C, P]
@@ -79,7 +79,7 @@ object Continuation {
     def show(k: Continuation[C, P]): String = {
       given Show[ExtendedLambdaTerm.Abstraction[C, P]] = Show[ExtendedLambdaTerm[C, P]].narrow
       k match {
-        case ThenTerminate()                      => "ThenTerminate"
+        case ThenHalt()                           => "ThenTerminate"
         case ThenApplyAbstraction(abstraction, k) => s"ThenApplyAbstraction(${abstraction.show}, ${k.show})"
         case ThenEvalArg(arg, k)                  => s"ThenEvalArg(${arg.show}, ${k.show})"
         case ThenEvalOperatorArgs(op, evaluated, toEval, k) =>
@@ -124,8 +124,8 @@ object CEKMachineState {
         operatorEvaluator.eval(op, (v :: evaluated).reverse).map { result =>
           CEKMachineState(ValueClosure(result, Environment.empty), k)
         }
-      case (v, ThenTerminate()) =>
-        Right(CEKMachineState(v, ThenTerminate()))
+      case (v, ThenHalt()) =>
+        Right(CEKMachineState(v, ThenHalt()))
     }
   }
 
@@ -197,8 +197,8 @@ case class CEKMachineState[C, P](
       case Right(s) => s
     }
 
-  def hasTerminated: Boolean =
-    continuation == Continuation.ThenTerminate() && {
+  def hasHalted: Boolean =
+    continuation == Continuation.ThenHalt() && {
       closureToEvaluate.lambdaTerm match
         case _: Abstraction[C, P] => true
         case _: Constant[C, P]    => true
@@ -211,7 +211,7 @@ case class CEKMachineState[C, P](
         stepLimit: Option[Int]
     ): Either[EvaluationError[C, P], CEKMachineState[C, P]] =
       if stepLimit.exists(_ <= 0) then Right(state)
-      else if state.hasTerminated then Right(state)
+      else if state.hasHalted then Right(state)
       else
         state.stepOnce match {
           case Left(e)  => Left(e)
@@ -221,5 +221,5 @@ case class CEKMachineState[C, P](
     loop(this, stepLimit)
 
   def showWithShowInstances(using Show[C], Show[P]): String =
-    s"CEKMachineState(${closureToEvaluate.show}, ${continuation.show})"
+    s"CEK(${closureToEvaluate.show}, ${continuation.show})"
 }

@@ -31,14 +31,15 @@ object CLI {
 
   def handleCEKMachineEvaluation(term: ExtendedLambdaTerm[BoolOrNat, ArithmeticOps]): Unit = {
     import io.github.kory33.scala3_lambda_calculus.cek.{*, given}
-    import io.github.kory33.scala3_lambda_calculus.cek.CEKMachineState.{*, given}
+    import CEKMachineState.{*, given}
+    import Continuation.*
 
-    var machineState = CEKMachineState(Closure(term, Environment.empty), Continuation.ThenTerminate())
+    var machineState = CEKMachineState(Closure(term, Environment.empty), ThenHalt())
 
     val maxSteps = 2000
     var counter = 0
     while (counter < maxSteps) {
-      if (machineState.hasTerminated) {
+      if (machineState.hasHalted) {
         printlnIndented(1, encloseInSGR(32, "[Evaluation terminated successfully]"))
         printlnIndented(2, encloseInSGR(32, s"${machineState.closureToEvaluate.lambdaTerm.show}"))
         return
