@@ -210,6 +210,9 @@ case class CEKMachineState[C, P](
 }
 
 class CEKMachine[C, P](private var state: CEKMachineState[C, P]) {
+  def this(term: ExtendedLambdaTerm[C, P])(using operatorEvaluator: P `EvaluatesTo` C) =
+    this(CEKMachineState(Closure(term, Environment.empty), Continuation.ThenHalt()))
+
   import CEKMachineState.*
 
   def runUntilTermination(stepLimit: Option[Int] = None): Either[EvaluationError[C, P], CEKMachineState[C, P]] = {
