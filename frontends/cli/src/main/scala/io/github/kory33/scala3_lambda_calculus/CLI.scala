@@ -59,7 +59,10 @@ object CLI {
           case Left(EvaluationError.PrimitiveOperatorFailedToEvaluate(msg, op, args)) =>
             printlnIndented(
               2,
-              encloseInSGR(31, s"Error: failed to evaluate a primitive operator `$op` with arguments $args: $msg")
+              encloseInSGR(
+                31,
+                s"Error: failed to evaluate a primitive operator `${op.show}` with arguments ${args.show}: $msg"
+              )
             )
             return
           case Right(nextState) => nextState
