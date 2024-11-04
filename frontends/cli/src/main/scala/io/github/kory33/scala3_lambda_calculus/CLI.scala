@@ -41,7 +41,8 @@ object CLI {
     while (counter < maxSteps) {
       if (machineState.isHaltingState) {
         printlnIndented(1, encloseInSGR(32, "[Evaluation terminated successfully]"))
-        printlnIndented(2, encloseInSGR(32, s"${machineState.closureToEvaluate.lambdaTerm.show}"))
+        printlnIndented(2, encloseInSGR(32, s"Result term: ${machineState.closureToEvaluate.lambdaTerm.show}"))
+        printlnIndented(2, encloseInSGR(32, s"        env: ${machineState.closureToEvaluate.environment.show}"))
         return
       } else {
         printlnIndented(
