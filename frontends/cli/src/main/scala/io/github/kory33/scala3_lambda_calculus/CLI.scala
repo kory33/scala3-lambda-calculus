@@ -36,7 +36,7 @@ object CLI {
 
     var machineState = CEKMachineState(Closure(term, Environment.empty), ThenHalt())
 
-    val maxSteps = 2000
+    val maxSteps = 20000
     var counter = 0
     while (counter < maxSteps) {
       if (machineState.isHaltingState) {
@@ -45,10 +45,13 @@ object CLI {
         printlnIndented(2, encloseInSGR(32, s"        env: ${machineState.closureToEvaluate.environment.show}"))
         return
       } else {
-        printlnIndented(
-          1,
-          encloseInSGR(2, s"[Eval, step $counter]> ") + encloseInSGR(36, s"${machineState.show}")
-        )
+        // print on steps 0, 1, 2, ..., 249, 250, 300, 400, 500, ..., 1000, 2000, 3000, ..., 10000, 20000
+        if (counter < 250 || counter % (Math.pow(10, (Math.floor(Math.log10(counter)))).toInt) == 0) {
+          printlnIndented(
+            1,
+            encloseInSGR(2, s"[Eval, step $counter]> ") + encloseInSGR(36, s"${machineState.show}")
+          )
+        }
 
         machineState = machineState.stepOnce match {
           case Left(EvaluationError.VariableNotBound(v)) =>
