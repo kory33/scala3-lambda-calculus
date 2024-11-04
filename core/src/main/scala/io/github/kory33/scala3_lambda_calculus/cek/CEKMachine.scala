@@ -197,7 +197,7 @@ case class CEKMachineState[C, P](
       case Right(s) => s
     }
 
-  def hasHalted: Boolean =
+  def isHaltingState: Boolean =
     continuation == Continuation.ThenHalt() && {
       closureToEvaluate.lambdaTerm match
         case _: Abstraction[C, P] => true
@@ -205,21 +205,22 @@ case class CEKMachineState[C, P](
         case _                    => false
     }
 
-  def stepUntilTermination(stepLimit: Option[Int] = None): Either[EvaluationError[C, P], CEKMachineState[C, P]] =
-    @tailrec def loop(
-        state: CEKMachineState[C, P],
-        stepLimit: Option[Int]
-    ): Either[EvaluationError[C, P], CEKMachineState[C, P]] =
-      if stepLimit.exists(_ <= 0) then Right(state)
-      else if state.hasHalted then Right(state)
-      else
-        state.stepOnce match {
-          case Left(e)  => Left(e)
-          case Right(s) => loop(s, stepLimit.map(_ - 1))
-        }
-
-    loop(this, stepLimit)
-
   def showWithShowInstances(using Show[C], Show[P]): String =
     s"CEK(${closureToEvaluate.show}, ${continuation.show})"
+}
+
+class CEKMachine[C, P](private var state: CEKMachineState[C, P]) {
+  import CEKMachineState.*
+
+  def runUntilTermination(stepLimit: Option[Int] = None): Either[EvaluationError[C, P], CEKMachineState[C, P]] = {
+    var remainingSteps = stepLimit
+    while remainingSteps.forall(_ > 0) && !state.isHaltingState do {
+      state = state.stepOnce match {
+        case Left(e)  => return Left(e)
+        case Right(s) => s
+      }
+      remainingSteps = remainingSteps.map(_ - 1)
+    }
+    Right(state)
+  }
 }

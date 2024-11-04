@@ -39,7 +39,7 @@ object CLI {
     val maxSteps = 2000
     var counter = 0
     while (counter < maxSteps) {
-      if (machineState.hasHalted) {
+      if (machineState.isHaltingState) {
         printlnIndented(1, encloseInSGR(32, "[Evaluation terminated successfully]"))
         printlnIndented(2, encloseInSGR(32, s"${machineState.closureToEvaluate.lambdaTerm.show}"))
         return
