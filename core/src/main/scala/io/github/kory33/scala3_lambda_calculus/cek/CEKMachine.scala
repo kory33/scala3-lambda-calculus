@@ -15,9 +15,7 @@ enum EvaluationError[C, P]:
 case class ClosureWithTermRestriction[+C, +P, +TermSubClass <: ExtendedLambdaTerm[C, P]](
     lambdaTerm: TermSubClass,
     environment: Environment[C, P]
-) {
-  require(lambdaTerm.freeVariables.subsetOf(environment.mapping.keySet))
-}
+)
 object ClosureWithTermRestriction {
   given [C: Show, P: Show, TermSubClass <: ExtendedLambdaTerm[C, P]]
       : Show[ClosureWithTermRestriction[C, P, TermSubClass]] with {
