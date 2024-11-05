@@ -8,6 +8,7 @@ import io.github.kory33.scala3_lambda_calculus.extended.extensions.BoolOrNat
 import io.github.kory33.scala3_lambda_calculus.extended.extensions.ArithmeticOps
 import io.github.kory33.scala3_lambda_calculus.cek.CEKMachineState
 import io.github.kory33.scala3_lambda_calculus.cek.Environment
+import io.github.kory33.scala3_lambda_calculus.cek.Continuation
 
 object CLI {
   import cats.syntax.all.*
@@ -29,6 +30,24 @@ object CLI {
   }
   import Printing.*
 
+  def showContinuationWithSymbolicFormatting[C: Show, P: Show](continuation: Continuation[C, P]): String = {
+    continuation match {
+      case Continuation.ThenHalt() => "HALT"
+      case Continuation.ThenApplyAbstraction(abs, andThen) =>
+        s"(${abs.show} ##) -> " + showContinuationWithSymbolicFormatting(andThen)
+      case Continuation.ThenEvalArg(arg, andThen) =>
+        s"(## ${arg.show}) -> " + showContinuationWithSymbolicFormatting(andThen)
+      case Continuation.ThenEvalOperatorArgs(op, evaluatedReverse, toEvaluate, andThen) =>
+        val evRevStr = evaluatedReverse.map(_.show).mkString(", ")
+        val toEvalStr = toEvaluate.map(_.show).mkString(", ")
+
+        s"[${op.show}${if (evRevStr.isEmpty()) " " else s" $evRevStr "}##${
+            if (toEvalStr.isEmpty()) "" else s" $toEvalStr"
+          }] -> " +
+          showContinuationWithSymbolicFormatting(andThen)
+    }
+  }
+
   def handleCEKMachineEvaluation(term: ExtendedLambdaTerm[BoolOrNat, ArithmeticOps]): Unit = {
     import io.github.kory33.scala3_lambda_calculus.cek.{*, given}
     import CEKMachineState.{*, given}
@@ -47,9 +66,12 @@ object CLI {
       } else {
         // print on steps 0, 1, 2, ..., 249, 250, 300, 400, 500, ..., 1000, 2000, 3000, ..., 10000, 20000
         if (counter < 250 || counter % (Math.pow(10, (Math.floor(Math.log10(counter)))).toInt) == 0) {
+          val machineStateShown =
+            s"CEK(${machineState.closureToEvaluate.show}, ${showContinuationWithSymbolicFormatting(machineState.continuation)})"
+
           printlnIndented(
             1,
-            encloseInSGR(2, s"[Eval, step $counter]> ") + encloseInSGR(36, s"${machineState.show}")
+            encloseInSGR(2, s"[Eval, step $counter]> ") + encloseInSGR(36, machineStateShown)
           )
         }
 
