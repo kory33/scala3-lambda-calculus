@@ -58,23 +58,23 @@ object CLI {
     val maxSteps = 20000
     var counter = 0
     while (counter < maxSteps) {
+      // print on steps 0, 1, 2, ..., 249, 250, 300, 400, 500, ..., 1000, 2000, 3000, ..., 10000, 20000
+      if (counter < 250 || counter % (Math.pow(10, (Math.floor(Math.log10(counter)))).toInt) == 0) {
+        val machineStateShown =
+          s"CEK(${machineState.closureToEvaluate.show}, ${showContinuationWithSymbolicFormatting(machineState.continuation)})"
+
+        printlnIndented(
+          1,
+          encloseInSGR(2, s"[Eval, step $counter]> ") + encloseInSGR(36, machineStateShown)
+        )
+      }
+
       if (machineState.isHaltingState) {
         printlnIndented(1, encloseInSGR(32, "[Evaluation terminated successfully]"))
         printlnIndented(2, encloseInSGR(32, s"Result term: ${machineState.closureToEvaluate.lambdaTerm.show}"))
         printlnIndented(2, encloseInSGR(32, s"        env: ${machineState.closureToEvaluate.environment.show}"))
         return
       } else {
-        // print on steps 0, 1, 2, ..., 249, 250, 300, 400, 500, ..., 1000, 2000, 3000, ..., 10000, 20000
-        if (counter < 250 || counter % (Math.pow(10, (Math.floor(Math.log10(counter)))).toInt) == 0) {
-          val machineStateShown =
-            s"CEK(${machineState.closureToEvaluate.show}, ${showContinuationWithSymbolicFormatting(machineState.continuation)})"
-
-          printlnIndented(
-            1,
-            encloseInSGR(2, s"[Eval, step $counter]> ") + encloseInSGR(36, machineStateShown)
-          )
-        }
-
         machineState = machineState.stepOnce match {
           case Left(EvaluationError.VariableNotBound(v)) =>
             printlnIndented(2, encloseInSGR(31, s"Error: tried to evaluate a variable `$v` which is not bound"))
