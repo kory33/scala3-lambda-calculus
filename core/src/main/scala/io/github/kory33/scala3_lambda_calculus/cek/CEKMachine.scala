@@ -6,6 +6,7 @@ import io.github.kory33.scala3_lambda_calculus.extended.ExtendedLambdaTerm
 import cats.derived.*
 import cats.Show
 import cats.syntax.all.*
+import io.github.kory33.scala3_lambda_calculus.extended.ExtendedLambdaTerm.Value
 
 enum EvaluationError[C, P]:
   case VariableNotBound(variable: Variable)
@@ -69,20 +70,21 @@ enum Continuation[C, P]:
   )
   case ThenEvalOperatorArgs(
       operator: P,
-      alreadyEvaluatedReverseArgs: List[ValueClosure[C, P]],
-      argsToEvaluate: List[Closure[C, P]],
+      environmentAtOpApplication: Environment[C, P],
+      alreadyEvaluatedReverseArgs: List[Value[C, P]],
+      argsToEvaluate: List[ExtendedLambdaTerm[C, P]],
       andThen: Continuation[C, P]
   )
 
 object Continuation {
   given [C: Show, P: Show]: Show[Continuation[C, P]] with {
     def show(k: Continuation[C, P]): String = {
-      given Show[ExtendedLambdaTerm.Abstraction[C, P]] = Show[ExtendedLambdaTerm[C, P]].narrow
+      given Show[ExtendedLambdaTerm.Value[C, P]] = Show[ExtendedLambdaTerm[C, P]].narrow
       k match {
         case ThenHalt()                           => "ThenTerminate"
         case ThenApplyAbstraction(abstraction, k) => s"ThenApplyAbstraction(${abstraction.show}, ${k.show})"
         case ThenEvalArg(arg, k)                  => s"ThenEvalArg(${arg.show}, ${k.show})"
-        case ThenEvalOperatorArgs(op, evaluated, toEval, k) =>
+        case ThenEvalOperatorArgs(op, env, evaluated, toEval, k) =>
           val evaluatedStr = evaluated.map(_.show).mkString("[", ", ", "]")
           val toEvalStr = toEval.map(_.show).mkString("[", ", ", "]")
           s"ThenEvalOperatorArgs($op, $evaluatedStr, $toEvalStr, ${k.show})"
@@ -114,15 +116,19 @@ object CEKMachineState {
       case (v, ThenEvalArg(closure, k)) =>
         v.lambdaTerm match {
           case abs: Abstraction[C, P] =>
-            Right(CEKMachineState(closure, ThenApplyAbstraction(AbstractionClosure(abs, v.environment), k)))
+            Right(CEKMachineState(closure, ThenApplyAbstraction(AbstractionClosure(abs, v.environment) /* == v*/, k)))
           case const: Constant[C, P] =>
             Left(EvaluationError.ArgumentAppliedToConstant(const.constant, v.lambdaTerm))
         }
-      case (v, ThenEvalOperatorArgs(op, evaluated, nextArg :: rest, k)) =>
-        Right(CEKMachineState(nextArg, ThenEvalOperatorArgs(op, v :: evaluated, rest, k)))
-      case (v, ThenEvalOperatorArgs(op, evaluated, Nil, k)) =>
-        operatorEvaluator.eval(op, (v :: evaluated).reverse).map { result =>
-          CEKMachineState(ValueClosure(result, Environment.empty), k)
+      case (v, ThenEvalOperatorArgs(op, env, evaluated, nextArg :: rest, k)) =>
+        // we throw away v.environment since ...
+        //   (TODO: I think we can prove by induction that, as long as no primitive operator "adds" a variable binding to the environment, v.environment == env)
+        Right(CEKMachineState(Closure(nextArg, env), ThenEvalOperatorArgs(op, env, v.lambdaTerm :: evaluated, rest, k)))
+      case (v, ThenEvalOperatorArgs(op, env, evaluated, Nil, k)) =>
+        // we throw away v.environment since ...
+        //   (TODO: I think we can prove by induction that, as long as no primitive operator "adds" a variable binding to the environment, v.environment == env)
+        operatorEvaluator.eval(op, (v.lambdaTerm :: evaluated).reverse.map(ValueClosure(_, env))).map { result =>
+          CEKMachineState(ValueClosure(result, env), k)
         }
       case (v, ThenHalt()) =>
         Right(CEKMachineState(v, ThenHalt()))
@@ -156,7 +162,7 @@ object CEKMachineState {
         Right(
           CEKMachineState(
             Closure(m1, env),
-            Continuation.ThenEvalOperatorArgs(op, Nil, argsRest.map(m => Closure(m, env)), k)
+            Continuation.ThenEvalOperatorArgs(op, env, Nil, argsRest, k)
           )
         )
       case (Closure(value: (Abstraction[C, P] | Constant[C, P]), env), k) =>

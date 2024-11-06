@@ -37,13 +37,19 @@ object CLI {
         s"(${abs.show} ##) -> " + showContinuationWithSymbolicFormatting(andThen)
       case Continuation.ThenEvalArg(arg, andThen) =>
         s"(## ${arg.show}) -> " + showContinuationWithSymbolicFormatting(andThen)
-      case Continuation.ThenEvalOperatorArgs(op, evaluatedReverse, toEvaluate, andThen) =>
-        val evRevStr = evaluatedReverse.map(_.show).mkString(", ")
-        val toEvalStr = toEvaluate.map(_.show).mkString(", ")
+      case Continuation.ThenEvalOperatorArgs(op, env, evaluatedReverse, toEvaluate, andThen) =>
+        given Show[ExtendedLambdaTerm.Value[C, P]] = Show[ExtendedLambdaTerm[C, P]].narrow
+        def showNonTopLevel(t: ExtendedLambdaTerm[C, P]): String = t match {
+          case ExtendedLambdaTerm.Abstraction(_, _) => s"(${t.show})"
+          case _                                    => t.show
+        }
+
+        val evRevStr = evaluatedReverse.map(showNonTopLevel).mkString(" ")
+        val toEvalStr = toEvaluate.map(showNonTopLevel).mkString(" ")
 
         s"[${op.show}${if (evRevStr.isEmpty()) " " else s" $evRevStr "}##${
             if (toEvalStr.isEmpty()) "" else s" $toEvalStr"
-          }] -> " +
+          } / ${env.show}] -> " +
           showContinuationWithSymbolicFormatting(andThen)
     }
   }
