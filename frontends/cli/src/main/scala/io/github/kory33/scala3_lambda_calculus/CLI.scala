@@ -44,7 +44,7 @@ object CLI {
           case _                                    => t.show
         }
 
-        val evRevStr = evaluatedReverse.map(showNonTopLevel).mkString(" ")
+        val evRevStr = evaluatedReverse.reverse.map(_.show).mkString(" ")
         val toEvalStr = toEvaluate.map(showNonTopLevel).mkString(" ")
 
         s"[${op.show}${if (evRevStr.isEmpty()) " " else s" $evRevStr "}##${
@@ -86,7 +86,12 @@ object CLI {
             printlnIndented(2, encloseInSGR(31, s"Error: tried to evaluate a variable `$v` which is not bound"))
             return
           case Left(EvaluationError.ArgumentAppliedToConstant(c, arg)) =>
-            printlnIndented(2, encloseInSGR(31, s"Error: tried to apply an argument `$arg` to a constant `$c`"))
+            given Show[ExtendedLambdaTerm.Value[BoolOrNat, ArithmeticOps]] =
+              Show[ExtendedLambdaTerm[BoolOrNat, ArithmeticOps]].narrow
+            printlnIndented(
+              2,
+              encloseInSGR(31, s"Error: tried to apply an argument `${arg.show}` to a constant `${c.show}`")
+            )
             return
           case Left(EvaluationError.PrimitiveOperatorFailedToEvaluate(msg, op, args)) =>
             printlnIndented(

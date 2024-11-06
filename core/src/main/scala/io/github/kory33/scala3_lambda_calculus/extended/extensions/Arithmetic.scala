@@ -7,6 +7,7 @@ import io.github.kory33.scala3_lambda_calculus.extended.ExtendedLambdaTerm
 import io.github.kory33.scala3_lambda_calculus.extended.ExtendedLambdaTerm.*
 import cats.Show
 import cats.derived.*
+import io.github.kory33.scala3_lambda_calculus.cek.Closure
 
 case class Natural(value: BigInt) {
   require(value >= 0)
@@ -36,12 +37,12 @@ object ArithmeticOps {
         args: List[ValueClosure[BoolOrNat, ArithmeticOps]]
     ): Either[
       PrimitiveOperatorFailedToEvaluate[BoolOrNat, ArithmeticOps],
-      Value[BoolOrNat, ArithmeticOps]
+      Closure[BoolOrNat, ArithmeticOps]
     ] = p match {
       case Add =>
         args match {
           case List(ValueClosure(Constant(Natural(a)), _), ValueClosure(Constant(Natural(b)), _)) =>
-            Right(Constant(Natural(a + b)))
+            Right(Closure.withEmptyEnvironment(Constant(Natural(a + b))))
           case List(ValueClosure(v1, _), ValueClosure(v2, _)) =>
             Left(PrimitiveOperatorFailedToEvaluate(s"Cannot add $v1 and $v2", p, args))
           case _ =>
@@ -50,7 +51,7 @@ object ArithmeticOps {
       case Mul =>
         args match {
           case List(ValueClosure(Constant(Natural(a)), _), ValueClosure(Constant(Natural(b)), _)) =>
-            Right(Constant(Natural(a * b)))
+            Right(Closure.withEmptyEnvironment(Constant(Natural(a * b))))
           case List(ValueClosure(v1, _), ValueClosure(v2, _)) =>
             Left(PrimitiveOperatorFailedToEvaluate(s"Cannot multiply $v1 and $v2", p, args))
           case _ =>
@@ -59,7 +60,7 @@ object ArithmeticOps {
       case FirstLeqSecond =>
         args match {
           case List(ValueClosure(Constant(Natural(a)), _), ValueClosure(Constant(Natural(b)), _)) =>
-            Right(Constant(a <= b))
+            Right(Closure.withEmptyEnvironment(Constant(a <= b)))
           case List(ValueClosure(v1, _), ValueClosure(v2, _)) =>
             Left(PrimitiveOperatorFailedToEvaluate(s"Cannot compare $v1 and $v2", p, args))
           case _ =>
@@ -68,7 +69,7 @@ object ArithmeticOps {
       case If =>
         args match {
           case List(ValueClosure(Constant(cond: Boolean), _), v1, v2) =>
-            if cond then Right(v1.lambdaTerm) else Right(v2.lambdaTerm)
+            if cond then Right(v1) else Right(v2)
           case List(v1, _, _) =>
             Left(PrimitiveOperatorFailedToEvaluate(s"Expected a Boolean condition, found $v1", p, args))
           case _ =>
@@ -77,8 +78,9 @@ object ArithmeticOps {
       case PredOrZero =>
         args match {
           case List(ValueClosure(Constant(Natural(n)), _)) =>
-            if n == 0 then Right(Constant(Natural(0)))
-            else Right(Constant(Natural(n - 1)))
+            Right(Closure.withEmptyEnvironment(Constant(Natural {
+              if n == 0 then 0 else n - 1
+            })))
           case List(ValueClosure(v, _)) =>
             Left(PrimitiveOperatorFailedToEvaluate(s"Expected a Natural number, found $v", p, args))
           case _ =>

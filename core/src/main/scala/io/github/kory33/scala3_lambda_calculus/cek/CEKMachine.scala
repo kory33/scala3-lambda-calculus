@@ -16,7 +16,12 @@ enum EvaluationError[C, P]:
 case class ClosureWithTermRestriction[+C, +P, +TermSubClass <: ExtendedLambdaTerm[C, P]](
     lambdaTerm: TermSubClass,
     environment: Environment[C, P]
-)
+) {
+  def supplementEnvironment[C2 >: C, P2 >: P](
+      env: Environment[C2, P2]
+  ): ClosureWithTermRestriction[C2, P2, TermSubClass] =
+    ClosureWithTermRestriction(lambdaTerm, environment ++ env)
+}
 object ClosureWithTermRestriction {
   given [C: Show, P: Show, TermSubClass <: ExtendedLambdaTerm[C, P]]
       : Show[ClosureWithTermRestriction[C, P, TermSubClass]] with {
@@ -33,6 +38,9 @@ trait ClosureWithTermRestrictionSpecialization[TermSubClass[C, P] <: ExtendedLam
   def unapply[C, P](
       closure: ClosureWithTermRestriction[C, P, TermSubClass[C, P]]
   ): (TermSubClass[C, P], Environment[C, P]) = (closure.lambdaTerm, closure.environment)
+
+  def withEmptyEnvironment[C, P](lambdaTerm: TermSubClass[C, P]): ClosureWithTermRestriction[C, P, TermSubClass[C, P]] =
+    ClosureWithTermRestriction(lambdaTerm, Environment.empty)
 }
 
 type Closure[+C, +P] = ClosureWithTermRestriction[C, P, ExtendedLambdaTerm[C, P]]
@@ -48,6 +56,9 @@ case class Environment[+C, +P](mapping: Map[Variable, Closure[C, P]]) {
 
   def lookup(variable: Variable): Option[Closure[C, P]] =
     mapping.get(variable)
+
+  def ++[C2 >: C, P2 >: P](that: Environment[C2, P2]): Environment[C2, P2] =
+    Environment(mapping ++ that.mapping)
 }
 object Environment {
   given [C: Show, P: Show]: Show[Environment[C, P]] with {
@@ -71,7 +82,7 @@ enum Continuation[C, P]:
   case ThenEvalOperatorArgs(
       operator: P,
       environmentAtOpApplication: Environment[C, P],
-      alreadyEvaluatedReverseArgs: List[Value[C, P]],
+      alreadyEvaluatedReverseArgs: List[ValueClosure[C, P]],
       argsToEvaluate: List[ExtendedLambdaTerm[C, P]],
       andThen: Continuation[C, P]
   )
@@ -121,14 +132,10 @@ object CEKMachineState {
             Left(EvaluationError.ArgumentAppliedToConstant(const.constant, v.lambdaTerm))
         }
       case (v, ThenEvalOperatorArgs(op, env, evaluated, nextArg :: rest, k)) =>
-        // we throw away v.environment since ...
-        //   (TODO: I think we can prove by induction that, as long as no primitive operator "adds" a variable binding to the environment, v.environment == env)
-        Right(CEKMachineState(Closure(nextArg, env), ThenEvalOperatorArgs(op, env, v.lambdaTerm :: evaluated, rest, k)))
+        Right(CEKMachineState(Closure(nextArg, env), ThenEvalOperatorArgs(op, env, v :: evaluated, rest, k)))
       case (v, ThenEvalOperatorArgs(op, env, evaluated, Nil, k)) =>
-        // we throw away v.environment since ...
-        //   (TODO: I think we can prove by induction that, as long as no primitive operator "adds" a variable binding to the environment, v.environment == env)
-        operatorEvaluator.eval(op, (v.lambdaTerm :: evaluated).reverse.map(ValueClosure(_, env))).map { result =>
-          CEKMachineState(ValueClosure(result, env), k)
+        operatorEvaluator.eval(op, (v :: evaluated).reverse).map { result =>
+          CEKMachineState(result.supplementEnvironment(env), k)
         }
       case (v, ThenHalt()) =>
         Right(CEKMachineState(v, ThenHalt()))
@@ -156,7 +163,7 @@ object CEKMachineState {
         )
       case (Closure(PrimitiveOperator(op, Nil), env), k) =>
         operatorEvaluator.eval(op, Nil).map { result =>
-          CEKMachineState(ValueClosure(result, Environment.empty), k)
+          CEKMachineState(result.supplementEnvironment(env), k)
         }
       case (Closure(PrimitiveOperator(op, m1 :: argsRest), env), k) =>
         Right(
@@ -174,7 +181,7 @@ object CEKMachineState {
 trait EvaluatesTo[P, C] {
   def eval(p: P, args: List[ValueClosure[C, P]]): Either[
     EvaluationError.PrimitiveOperatorFailedToEvaluate[C, P],
-    /* no free-variables */ ExtendedLambdaTerm.Value[C, P]
+    /* no free-variables */ Closure[C, P]
   ]
 }
 
@@ -182,7 +189,7 @@ object EvaluatesTo {
   given EvaluatesTo[Nothing, Nothing] with {
     def eval(p: Nothing, args: List[ValueClosure[Nothing, Nothing]]): Either[
       EvaluationError.PrimitiveOperatorFailedToEvaluate[Nothing, Nothing],
-      ExtendedLambdaTerm.Value[Nothing, Nothing]
+      Closure[Nothing, Nothing]
     ] = p // unreachable
   }
 }
@@ -217,7 +224,7 @@ case class CEKMachineState[C, P](
 
 class CEKMachine[C, P](private var state: CEKMachineState[C, P]) {
   def this(term: ExtendedLambdaTerm[C, P])(using operatorEvaluator: P `EvaluatesTo` C) =
-    this(CEKMachineState(Closure(term, Environment.empty), Continuation.ThenHalt()))
+    this(CEKMachineState(Closure.withEmptyEnvironment(term), Continuation.ThenHalt()))
 
   import CEKMachineState.*
 
