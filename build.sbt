@@ -1,4 +1,4 @@
-ThisBuild / scalaVersion := "3.6.1"
+ThisBuild / scalaVersion := "3.6.2"
 ThisBuild / libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0",
   "org.typelevel" %% "cats-core" % "2.12.0",
